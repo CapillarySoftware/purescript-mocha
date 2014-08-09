@@ -1,0 +1,28 @@
+{
+  "name": "purescript-mocha",
+  "version": "0.0.1",
+  "homepage": "https://github.com/CapillarySoftware/purescript-mocha",
+  "authors": [
+    "Isaac Shapira <fresheyeball@gmail.com>"
+  ],
+  "description": "Mocha bindings for PureScript",
+  "main": "src/Test/Mocha.purs",
+  "keywords": [
+    "Purescript",
+    "Mocha"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "mocha": "~1.21.4",
+    "purescript-easy-ffi": "~1.0.1"
+  },
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "node_modules",
+    "output",
+    "bower.json",
+    "Gruntfile.js",
+    "package.json"
+  ]
+}

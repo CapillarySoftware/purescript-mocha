@@ -1,0 +1,2 @@
+:m src/Test/Mocha.purs
+:m bower_components/purescript-easy-ffi/src/EasyFFI.purs
