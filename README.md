@@ -1,4 +1,5 @@
 # Module Documentation
+[![Build Status](https://travis-ci.org/CapillarySoftware/purescript-mocha.svg?branch=master)](https://travis-ci.org/CapillarySoftware/purescript-mocha)
 
 ## Module Test.Mocha
 
