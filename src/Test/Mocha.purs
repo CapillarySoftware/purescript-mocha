@@ -52,7 +52,7 @@ foreign import itAsync
          Eff (it :: It | eff) Unit
 
 foreign import itIs
-  "function itIs(d){ return d(); }" :: forall eff. 
+  "function itIs(d){ return function(){d();} }" :: forall eff.
                                        DoneToken -> 
                                        Eff (done :: Done | eff) Unit
 
