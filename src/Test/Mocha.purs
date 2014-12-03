@@ -1,7 +1,7 @@
 module Test.Mocha
   ( Describe(..), DoDescribe(..)
   , It(..), DoIt(..)
-  , itIs, itIsNot, Done(..), DoneToken(..)  
+  , itIs, itIsNot, Done(..), DoneToken(..)
   , it, itAsync, itSkip, itOnly
   , describe, describeSkip, describeOnly
   , before, beforeEach, Before(..)
@@ -39,26 +39,26 @@ data DoneToken = DoneToken
 
 foreign import itAsync
   "function itAsync(d) {                          \
-  \    return function (fn) {                     \  
-  \       return function(){                      \ 
+  \    return function (fn) {                     \
+  \       return function(){                      \
   \         return window.it(d, function(done){   \
   \           return fn(done)();                  \
-  \         });                                   \  
+  \         });                                   \
   \       };                                      \
   \    };                                         \
-  \}" :: forall a eff. 
-         String -> 
-         (DoneToken -> Eff (done :: Done | eff) a) -> 
+  \}" :: forall a eff.
+         String ->
+         (DoneToken -> Eff (done :: Done | eff) a) ->
          Eff (it :: It | eff) Unit
 
 foreign import itIs
   "function itIs(d){ return function(){d();} }" :: forall eff.
-                                       DoneToken -> 
+                                       DoneToken ->
                                        Eff (done :: Done | eff) Unit
 
 foreign import itIsNot
-  "function itIsNot(d){ return function(){}; }" :: forall eff. 
-                                       DoneToken -> 
+  "function itIsNot(d){ return function(){}; }" :: forall eff.
+                                       DoneToken ->
                                        Eff (done :: Done | eff) Unit
 
 
