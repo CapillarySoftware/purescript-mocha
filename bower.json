@@ -14,7 +14,6 @@
   "license": "MIT",
   "dependencies": {
     "mocha": "~1.21.4",
-    "purescript-easy-ffi": "~1.0.1"
   },
   "ignore": [
     "**/.*",
