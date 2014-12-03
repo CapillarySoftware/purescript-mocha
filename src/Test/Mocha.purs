@@ -18,7 +18,7 @@ type DoDescribe = forall e a.
   String -> Eff e a -> Eff (describe :: Describe | e) Unit
 
 foreign import describe
-  """function(description) {
+  """function describe(description) {
     return function(fn) {
       return function() {
         globalEnv.describe(description, fn);
@@ -27,7 +27,7 @@ foreign import describe
   }""" :: DoDescribe
 
 foreign import describeOnly
-  """function(description) {
+  """function describeOnly(description) {
     return function(fn) {
       return function() {
         globalEnv.describe.only(description, fn);
@@ -36,7 +36,7 @@ foreign import describeOnly
   }""" :: DoDescribe
 
 foreign import describeSkip
-  """function(description) {
+  """function describeSkip(description) {
     return function(fn) {
       return function() {
         globalEnv.describe.skip(description, fn);
