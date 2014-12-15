@@ -8,29 +8,20 @@ module Test.Mocha
   , after, afterEach, After(..)) where
 
 import Control.Monad.Eff
-
-foreign import globalEnv
-  "var globalEnv = typeof window === 'undefined' ? global : window"
-  :: forall a. a
+import Context
 
 foreign import data Describe :: !
 type DoDescribe = forall e a.
   String -> Eff e a -> Eff (describe :: Describe | e) Unit
 
-foreign import describe
-  """function describe(description) {
-    return function(fn) {
-      return function() {
-        globalEnv.describe(description, fn);
-      }
-    }
-  }""" :: DoDescribe
+describe :: DoDescribe
+describe = getContext >>= method2Eff "describe"
 
 foreign import describeOnly
   """function describeOnly(description) {
     return function(fn) {
       return function() {
-        globalEnv.describe.only(description, fn);
+        getContext().describe.only(description, fn);
       }
     }
   }""" :: DoDescribe
@@ -39,7 +30,7 @@ foreign import describeSkip
   """function describeSkip(description) {
     return function(fn) {
       return function() {
-        globalEnv.describe.skip(description, fn);
+        getContext().describe.skip(description, fn);
       }
     }
   }""" :: DoDescribe
@@ -47,20 +38,14 @@ foreign import describeSkip
 foreign import data It :: !
 type DoIt = forall e a. String -> Eff e a -> Eff (it :: It | e) Unit
 
-foreign import it
-  """function it(description) {
-    return function(fn) {
-      return function() {
-        globalEnv.it(description, fn);
-      }
-    }
-  }""" :: DoIt
+it :: DoIt
+it = getContext >>= method2Eff "it"
 
 foreign import itOnly
   """function itOnly(description) {
     return function(fn) {
       return function() {
-        globalEnv.it.only(description, fn);
+        getContext().it.only(description, fn);
       }
     }
   }""" :: DoIt
@@ -69,7 +54,7 @@ foreign import itSkip
   """function itSkip(description) {
     return function(fn) {
       return function() {
-        globalEnv.it.skip(description, fn);
+        getContext().it.skip(description, fn);
       }
     }
   }""" :: DoIt
@@ -81,7 +66,7 @@ foreign import itAsync
   """function itAsync(d) {
       return function (fn) {
          return function(){
-           return globalEnv.it(d, function(done){
+           return getContext().it(d, function(done){
              return fn(done)();
            });
          };
@@ -107,37 +92,19 @@ foreign import itIsNot
 
 foreign import data Before :: !
 
-foreign import before
-  """function before(fn) {
-    return function() {
-      globalEnv.before(fn);
-    }
-  }
-  """ :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
+before :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
+before = getContext >>= method1Eff "before"
 
-foreign import beforeEach
-  """function beforeEach(fn) {
-    return function() {
-      globalEnv.beforeEach(fn);
-    }
-  }
-  """ :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
+beforeEach :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
+beforeEach = getContext >>= method1Eff "beforeEach"
+
+
 
 foreign import data After :: !
 
-foreign import after
-  """function after(fn) {
-    return function() {
-      globalEnv.after(fn);
-    }
-  }
-  """ :: forall e a. Eff e a -> Eff (after :: After | e) Unit
+after :: forall e a. Eff e a -> Eff (after :: After | e) Unit
+after = getContext >>= method1Eff "after"
 
-foreign import afterEach
-  """function afterEach(fn) {
-    return function() {
-      globalEnv.afterEach(fn);
-    }
-  }
-  """ :: forall e a. Eff e a -> Eff (after :: After | e) Unit
+afterEach :: forall e a. Eff e a -> Eff (after :: After | e) Unit
+afterEach = getContext >>= method1Eff "afterEach"
 
