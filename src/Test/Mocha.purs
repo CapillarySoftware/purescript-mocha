@@ -8,6 +8,7 @@ module Test.Mocha
   , after, afterEach, After(..)) where
 
 import Control.Monad.Eff
+import Data.Foreign.OOFFI
 import Context
 
 foreign import data Describe :: !
@@ -15,7 +16,7 @@ type DoDescribe = forall e a.
   String -> Eff e a -> Eff (describe :: Describe | e) Unit
 
 describe :: DoDescribe
-describe = getContext >>= method2Eff "describe"
+describe d fn = getContext >>= \c -> method2Eff "describe" c d fn
 
 foreign import describeOnly
   """function describeOnly(description) {
@@ -39,7 +40,7 @@ foreign import data It :: !
 type DoIt = forall e a. String -> Eff e a -> Eff (it :: It | e) Unit
 
 it :: DoIt
-it = getContext >>= method2Eff "it"
+it d fn = getContext >>= \c -> method2Eff "it" c d fn
 
 foreign import itOnly
   """function itOnly(description) {
@@ -93,18 +94,18 @@ foreign import itIsNot
 foreign import data Before :: !
 
 before :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
-before = getContext >>= method1Eff "before"
+before fn = getContext >>= \c -> method1Eff "before" c fn
 
 beforeEach :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
-beforeEach = getContext >>= method1Eff "beforeEach"
+beforeEach fn = getContext >>= \c -> method1Eff "beforeEach" c fn
 
 
 
 foreign import data After :: !
 
 after :: forall e a. Eff e a -> Eff (after :: After | e) Unit
-after = getContext >>= method1Eff "after"
+after fn = getContext >>= \c -> method1Eff "after" c fn
 
 afterEach :: forall e a. Eff e a -> Eff (after :: After | e) Unit
-afterEach = getContext >>= method1Eff "afterEach"
+afterEach fn = getContext >>= \c -> method1Eff "afterEach" c fn
 
