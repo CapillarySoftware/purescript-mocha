@@ -22,7 +22,7 @@ foreign import describeOnly
   """function describeOnly(description) {
     return function(fn) {
       return function() {
-        getContext().describe.only(description, fn);
+        Context.getContext().describe.only(description, fn);
       }
     }
   }""" :: DoDescribe
@@ -31,7 +31,7 @@ foreign import describeSkip
   """function describeSkip(description) {
     return function(fn) {
       return function() {
-        getContext().describe.skip(description, fn);
+        Context.getContext().describe.skip(description, fn);
       }
     }
   }""" :: DoDescribe
@@ -46,7 +46,7 @@ foreign import itOnly
   """function itOnly(description) {
     return function(fn) {
       return function() {
-        getContext().it.only(description, fn);
+        Context.getContext().it.only(description, fn);
       }
     }
   }""" :: DoIt
@@ -55,7 +55,7 @@ foreign import itSkip
   """function itSkip(description) {
     return function(fn) {
       return function() {
-        getContext().it.skip(description, fn);
+        Context.getContext().it.skip(description, fn);
       }
     }
   }""" :: DoIt
@@ -67,7 +67,7 @@ foreign import itAsync
   """function itAsync(d) {
       return function (fn) {
          return function(){
-           return getContext().it(d, function(done){
+           return Context.getContext().it(d, function(done){
              return fn(done)();
            });
          };
