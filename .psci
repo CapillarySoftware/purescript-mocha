@@ -1,4 +1,3 @@
 :m src/Test/Mocha.purs
 :m bower_components/purescript-context/src/Context.purs
-:m bower_components/purescript-easy-ffi/src/EasyFFI.purs
 :m bower_components/purescript-oo-ffi/src/Data/Foreign/OOFFI.purs

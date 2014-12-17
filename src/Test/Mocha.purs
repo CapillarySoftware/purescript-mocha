@@ -16,7 +16,7 @@ type DoDescribe = forall e a.
   String -> Eff e a -> Eff (describe :: Describe | e) Unit
 
 describe :: DoDescribe
-describe d fn = getContext >>= \c -> method2Eff "describe" c d fn
+describe = method2EffC "describe"
 
 foreign import describeOnly
   """function describeOnly(description) {
@@ -40,7 +40,7 @@ foreign import data It :: !
 type DoIt = forall e a. String -> Eff e a -> Eff (it :: It | e) Unit
 
 it :: DoIt
-it d fn = getContext >>= \c -> method2Eff "it" c d fn
+it = method2EffC "it"
 
 foreign import itOnly
   """function itOnly(description) {
@@ -94,18 +94,18 @@ foreign import itIsNot
 foreign import data Before :: !
 
 before :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
-before fn = getContext >>= \c -> method1Eff "before" c fn
+before = method1EffC "before"
 
 beforeEach :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
-beforeEach fn = getContext >>= \c -> method1Eff "beforeEach" c fn
+beforeEach = method1EffC "beforeEach"
 
 
 
 foreign import data After :: !
 
 after :: forall e a. Eff e a -> Eff (after :: After | e) Unit
-after fn = getContext >>= \c -> method1Eff "after" c fn
+after = method1EffC "after"
 
 afterEach :: forall e a. Eff e a -> Eff (after :: After | e) Unit
-afterEach fn = getContext >>= \c -> method1Eff "afterEach" c fn
+afterEach = method1EffC "afterEach"
 
