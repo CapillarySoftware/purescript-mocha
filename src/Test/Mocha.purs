@@ -13,7 +13,7 @@ import Context
 
 foreign import data Describe :: !
 type DoDescribe = forall e a.
-  String -> Eff e a -> Eff (describe :: Describe | e) Unit
+  String -> Eff (describe :: Describe | e) a -> Eff (describe :: Describe | e) Unit
 
 describe :: DoDescribe
 describe = method2EffC "describe"
