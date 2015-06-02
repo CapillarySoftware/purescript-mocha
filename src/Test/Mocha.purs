@@ -105,10 +105,14 @@ foreign import itIs
 
 foreign import itIsNot
   """function itIsNot(done) {
-      return function() {
+      return function(reason) {
+        return function() {
+          done(reason);
+        };
       };
   }""" :: forall eff a.
           DoneToken ->
+          a ->
           Eff (done :: Done | eff) Unit
 
 -- | Before Hooks
