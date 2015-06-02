@@ -6,50 +6,193 @@
 
 ## Module Test.Mocha
 
-### Types
+#### `Before`
 
-    data After :: !
-
-    data Before :: !
-
-    data Describe :: !
-
-    type DoDescribe  = forall e a. String -> Eff e a -> Eff (describe :: Describe | e) Unit
-
-    type DoIt  = forall e a. String -> Eff e a -> Eff (it :: It | e) Unit
-
-    data Done :: !
-
-    data DoneToken where
-      DoneToken :: DoneToken
-
-    data It :: !
+``` purescript
+data Before :: !
+```
 
 
-### Values
+#### `Describe`
 
-    after :: forall e a. Eff e a -> Eff (after :: After | e) Unit
+``` purescript
+data Describe :: !
+```
 
-    afterEach :: forall e a. Eff e a -> Eff (after :: After | e) Unit
 
-    before :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
+#### `It`
 
-    beforeEach :: forall e a. Eff e a -> Eff (before :: Before | e) Unit
+``` purescript
+data It :: !
+```
 
-    describe :: DoDescribe
 
-    describeOnly :: DoDescribe
+#### `After`
 
-    describeSkip :: DoDescribe
+``` purescript
+data After :: !
+```
 
-    it :: DoIt
 
-    itAsync :: forall a eff. String -> (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+#### `Done`
 
-    itIs :: forall eff. DoneToken -> Eff (done :: Done | eff) Unit
+``` purescript
+data Done :: !
+```
 
-    itIsNot :: forall eff. DoneToken -> Eff (done :: Done | eff) Unit
 
-    itOnly :: DoIt
+#### `DoIt`
 
-    itSkip :: DoIt
+``` purescript
+type DoIt = forall e a. String -> Eff e a -> Eff (it :: It | e) Unit
+```
+
+
+#### `DoDescribe`
+
+``` purescript
+type DoDescribe = forall e a. String -> Eff (describe :: Describe | e) a -> Eff (describe :: Describe | e) Unit
+```
+
+
+#### `DoBefore`
+
+``` purescript
+type DoBefore = forall e a. Eff e a -> Eff (before :: Before | e) Unit
+```
+
+
+#### `DoAfter`
+
+``` purescript
+type DoAfter = forall e a. Eff e a -> Eff (after :: After | e) Unit
+```
+
+
+#### `DoneToken`
+
+``` purescript
+data DoneToken
+  = DoneToken 
+```
+
+
+#### `describe`
+
+``` purescript
+describe :: DoDescribe
+```
+
+
+#### `describeOnly`
+
+``` purescript
+describeOnly :: DoDescribe
+```
+
+
+#### `describeSkip`
+
+``` purescript
+describeSkip :: DoDescribe
+```
+
+
+#### `it`
+
+``` purescript
+it :: DoIt
+```
+
+
+#### `itOnly`
+
+``` purescript
+itOnly :: DoIt
+```
+
+
+#### `itSkip`
+
+``` purescript
+itSkip :: DoIt
+```
+
+
+#### `itAsync`
+
+``` purescript
+itAsync :: forall a eff. String -> (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+```
+
+
+#### `itIs`
+
+``` purescript
+itIs :: forall eff. DoneToken -> Eff (done :: Done | eff) Unit
+```
+
+
+#### `itIsNot`
+
+``` purescript
+itIsNot :: forall eff a. DoneToken -> Eff (done :: Done | eff) Unit
+```
+
+
+#### `before`
+
+``` purescript
+before :: DoBefore
+```
+
+Before Hooks
+
+#### `beforeEach`
+
+``` purescript
+beforeEach :: DoBefore
+```
+
+
+#### `beforeAsync`
+
+``` purescript
+beforeAsync :: forall a eff. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+```
+
+
+#### `beforeEachAsync`
+
+``` purescript
+beforeEachAsync :: forall a eff. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+```
+
+
+#### `after`
+
+``` purescript
+after :: DoAfter
+```
+
+After Hooks
+
+#### `afterEach`
+
+``` purescript
+afterEach :: DoAfter
+```
+
+
+#### `afterAsync`
+
+``` purescript
+afterAsync :: forall a eff. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+```
+
+
+#### `afterEachAsync`
+
+``` purescript
+afterEachAsync :: forall a eff. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+```
