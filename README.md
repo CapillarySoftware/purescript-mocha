@@ -136,7 +136,7 @@ itIs :: forall eff. DoneToken -> Eff (done :: Done | eff) Unit
 #### `itIsNot`
 
 ``` purescript
-itIsNot :: forall eff a. DoneToken -> Eff (done :: Done | eff) Unit
+itIsNot :: forall eff a. DoneToken -> a -> Eff (done :: Done | eff) Unit
 ```
 
 
