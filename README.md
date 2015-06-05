@@ -164,86 +164,8 @@ itSkipAsync' :: DoItAsyncTimeout
 #### `xit`
 
 ``` purescript
-xit :: DoItSync
+xit :: forall eff. String -> Eff eff Unit
 ```
-
-
-#### `xitOnly`
-
-``` purescript
-xitOnly :: DoItSync
-```
-
-
-#### `xitSkip`
-
-``` purescript
-xitSkip :: DoItSync
-```
-
-
-#### `xit'`
-
-``` purescript
-xit' :: DoItSyncTimeout
-```
-
-
-#### `xitOnly'`
-
-``` purescript
-xitOnly' :: DoItSyncTimeout
-```
-
-
-#### `xitSkip'`
-
-``` purescript
-xitSkip' :: DoItSyncTimeout
-```
-
-
-#### `xitAsync`
-
-``` purescript
-xitAsync :: DoItAsync
-```
-
-
-#### `xitOnlyAsync`
-
-``` purescript
-xitOnlyAsync :: DoItAsync
-```
-
-
-#### `xitSkipAsync`
-
-``` purescript
-xitSkipAsync :: DoItAsync
-```
-
-
-#### `xitAsync'`
-
-``` purescript
-xitAsync' :: DoItAsyncTimeout
-```
-
-
-#### `xitOnlyAsync'`
-
-``` purescript
-xitOnlyAsync' :: DoItAsyncTimeout
-```
-
-
-#### `xitSkipAsync'`
-
-``` purescript
-xitSkipAsync' :: DoItAsyncTimeout
-```
-
 
 #### `DoDescribe`
 
@@ -279,17 +201,10 @@ describeSkip :: DoDescribe
 xdescribe :: DoDescribe
 ```
 
-#### `xdescribeOnly`
+#### `xdescribe'`
 
 ``` purescript
-xdescribeOnly :: DoDescribe
-```
-
-
-#### `xdescribeSkip`
-
-``` purescript
-xdescribeSkip :: DoDescribe
+xdescribe' :: forall eff. String -> Eff eff Unit
 ```
 
 

@@ -3,6 +3,8 @@ module Test.Mocha
   , It(..), Before(..), After(..)
   , itIs, itIsNot, Done(..), DoneToken(..)
 
+  , xit, xdescribe, xdescribe'
+
   , DoItSync(..), DoItSyncTimeout(..)
   , DoItAsync(..), DoItAsyncTimeout(..)
   , it, itOnly, itSkip
@@ -10,14 +12,8 @@ module Test.Mocha
   , itAsync, itOnlyAsync, itSkipAsync
   , itAsync', itOnlyAsync', itSkipAsync'
 
-  , xit, xitOnly, xitSkip
-  , xit', xitOnly', xitSkip'
-  , xitAsync, xitOnlyAsync, xitSkipAsync
-  , xitAsync', xitOnlyAsync', xitSkipAsync'
-
   , DoDescribe(..)
   , describe, describeOnly, describeSkip
-  , xdescribe, xdescribeOnly, xdescribeSkip
 
   , DoBefore(..), DoBeforeTimeout(..)
   , DoBeforeAsync(..), DoBeforeAsyncTimeout(..)
@@ -198,41 +194,8 @@ itSkipAsync' = flip runItSkipAsync
 -- `Xit`
 --
 
-runXitSync     = runItSync_ "xit"
-runXitOnlySync = runItSync_ "xit.only"
-runXitSkipSync = runItSync_ "xit.skip"
-
-xit      :: DoItSync
-xit      = runXitSync     0
-xitOnly  :: DoItSync
-xitOnly  = runXitOnlySync 0
-xitSkip  :: DoItSync
-xitSkip  = runXitSkipSync 0
-
-xit'     :: DoItSyncTimeout
-xit'     = flip runXitSync
-xitOnly' :: DoItSyncTimeout
-xitOnly' = flip runXitOnlySync
-xitSkip' :: DoItSyncTimeout
-xitSkip' = flip runXitSkipSync
-
-runXitAsync     = runItAsync_ "xit"
-runXitOnlyAsync = runItAsync_ "xit.only"
-runXitSkipAsync = runItAsync_ "xit.skip"
-
-xitAsync      :: DoItAsync
-xitAsync      = runXitAsync     0
-xitOnlyAsync  :: DoItAsync
-xitOnlyAsync  = runXitOnlyAsync 0
-xitSkipAsync  :: DoItAsync
-xitSkipAsync  = runXitSkipAsync 0
-
-xitAsync'     :: DoItAsyncTimeout
-xitAsync'     = flip runXitAsync
-xitOnlyAsync' :: DoItAsyncTimeout
-xitOnlyAsync' = flip runXitOnlyAsync
-xitSkipAsync' :: DoItAsyncTimeout
-xitSkipAsync' = flip runXitSkipAsync
+xit :: forall eff. String -> Eff eff Unit
+xit = flip (runItSync 0) $ pure unit
 
 -- |
 -- `Describe`
@@ -254,12 +217,11 @@ describeSkip = runDesc_ "describe.skip"
 -- |
 -- `Xdescribe`
 --
-xdescribe     :: DoDescribe
-xdescribe     = runDesc_ "xdescribe"
-xdescribeOnly :: DoDescribe
-xdescribeOnly = runDesc_ "xdescribe.only"
-xdescribeSkip :: DoDescribe
-xdescribeSkip = runDesc_ "xdescribe.skip"
+xdescribe  :: DoDescribe
+xdescribe  = runDesc_ "xdescribe"
+
+xdescribe' :: forall eff. String -> Eff eff Unit
+xdescribe' = flip (runDesc_ "xdescribe") $ pure unit
 
 -- |
 -- Before / BeforeEach Hook
