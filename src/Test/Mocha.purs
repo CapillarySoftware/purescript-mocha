@@ -3,6 +3,8 @@ module Test.Mocha
   , It(..), Before(..), After(..)
   , itIs, itIsNot, Done(..), DoneToken(..)
 
+  , DoItSync(..), DoItSyncTimeout(..)
+  , DoItAsync(..), DoItAsyncTimeout(..)
   , it, itOnly, itSkip
   , it', itOnly', itSkip'
   , itAsync, itOnlyAsync, itSkipAsync
@@ -13,12 +15,17 @@ module Test.Mocha
   , xitAsync, xitOnlyAsync, xitSkipAsync
   , xitAsync', xitOnlyAsync', xitSkipAsync'
 
+  , DoDescribe(..)
   , describe, describeOnly, describeSkip
   , xdescribe, xdescribeOnly, xdescribeSkip
 
+  , DoBefore(..), DoBeforeTimeout(..)
+  , DoBeforeAsync(..), DoBeforeAsyncTimeout(..)
   , before, before', beforeAsync, beforeAsync'
   , beforeEach, beforeEach', beforeEachAsync, beforeEachAsync'
 
+  , DoAfter(..), DoAfterTimeout(..)
+  , DoAfterAsync(..), DoAfterAsyncTimeout(..)
   , after, after', afterAsync, afterAsync'
   , afterEach, afterEach', afterEachAsync, afterEachAsync'
   ) where
@@ -127,165 +134,208 @@ hook n t to fn   = resolveC n >>= \c -> apply1 c $ t fn to
 -- `It`
 --
 
-runItSync_ :: forall a eff.
-    String ->
-    Number ->
-    String ->
-    Eff eff a ->
-    Eff (it :: It | eff) Unit
-runItSync_ n = run n sync
-
+runItSync_ n  = run n sync
 runItSync     = runItSync_ "it"
 runItOnlySync = runItSync_ "it.only"
 runItSkipSync = runItSync_ "it.skip"
 
-it      = runItSync     0
-itOnly  = runItOnlySync 0
-itSkip  = runItSkipSync 0
+type DoItSync = forall a eff.
+  String ->
+  Eff eff a ->
+  Eff (it :: It | eff) Unit
+
+it     :: DoItSync
+it     = runItSync     0
+itOnly :: DoItSync
+itOnly = runItOnlySync 0
+itSkip :: DoItSync
+itSkip = runItSkipSync 0
+
+type DoItSyncTimeout = forall a eff.
+  String ->
+  Number ->
+  Eff eff a ->
+  Eff (it :: It | eff) Unit
+
+it'     :: DoItSyncTimeout
 it'     = flip runItSync
+itOnly' :: DoItSyncTimeout
 itOnly' = flip runItOnlySync
+itSkip' :: DoItSyncTimeout
 itSkip' = flip runItSkipSync
 
-runItAsync_ :: forall a eff.
-    String ->
-    Number ->
-    String ->
-    (DoneToken -> Eff (done :: Done | eff) a) ->
-    Eff (it :: It | eff) Unit
-runItAsync_ n = run n async
-
+runItAsync_ n  = run n async
 runItAsync     = runItAsync_ "it"
 runItOnlyAsync = runItAsync_ "it.only"
 runItSkipAsync = runItAsync_ "it.skip"
 
+type DoItAsync = forall a eff.
+  String ->
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (it :: It | eff) Unit
+
+itAsync      :: DoItAsync
 itAsync      = runItAsync     0
+itOnlyAsync  :: DoItAsync
 itOnlyAsync  = runItOnlyAsync 0
+itSkipAsync  :: DoItAsync
 itSkipAsync  = runItSkipAsync 0
+
+type DoItAsyncTimeout = forall a eff.
+  String ->
+  Number ->
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (it :: It | eff) Unit
+
+itAsync'     :: DoItAsyncTimeout
 itAsync'     = flip runItAsync
+itOnlyAsync' :: DoItAsyncTimeout
 itOnlyAsync' = flip runItOnlyAsync
+itSkipAsync' :: DoItAsyncTimeout
 itSkipAsync' = flip runItSkipAsync
 
 -- |
 -- `Xit`
 --
 
-runXitSync_ :: forall a eff.
-    String ->
-    Number ->
-    String ->
-    Eff eff a ->
-    Eff (it :: It | eff) Unit
-runXitSync_ n = run n sync
+runXitSync     = runItSync_ "xit"
+runXitOnlySync = runItSync_ "xit.only"
+runXitSkipSync = runItSync_ "xit.skip"
 
-runXitSync     = runXitSync_ "xit"
-runXitOnlySync = runXitSync_ "xit.only"
-runXitSkipSync = runXitSync_ "xit.skip"
-
+xit      :: DoItSync
 xit      = runXitSync     0
+xitOnly  :: DoItSync
 xitOnly  = runXitOnlySync 0
+xitSkip  :: DoItSync
 xitSkip  = runXitSkipSync 0
+
+xit'     :: DoItSyncTimeout
 xit'     = flip runXitSync
+xitOnly' :: DoItSyncTimeout
 xitOnly' = flip runXitOnlySync
+xitSkip' :: DoItSyncTimeout
 xitSkip' = flip runXitSkipSync
 
-runXitAsync_ :: forall a eff.
-    String ->
-    Number ->
-    String ->
-    (DoneToken -> Eff (done :: Done | eff) a) ->
-    Eff (it :: It | eff) Unit
-runXitAsync_ n = run n async
+runXitAsync     = runItAsync_ "xit"
+runXitOnlyAsync = runItAsync_ "xit.only"
+runXitSkipAsync = runItAsync_ "xit.skip"
 
-runXitAsync     = runXitAsync_ "xit"
-runXitOnlyAsync = runXitAsync_ "xit.only"
-runXitSkipAsync = runXitAsync_ "xit.skip"
-
+xitAsync      :: DoItAsync
 xitAsync      = runXitAsync     0
+xitOnlyAsync  :: DoItAsync
 xitOnlyAsync  = runXitOnlyAsync 0
+xitSkipAsync  :: DoItAsync
 xitSkipAsync  = runXitSkipAsync 0
+
+xitAsync'     :: DoItAsyncTimeout
 xitAsync'     = flip runXitAsync
+xitOnlyAsync' :: DoItAsyncTimeout
 xitOnlyAsync' = flip runXitOnlyAsync
+xitSkipAsync' :: DoItAsyncTimeout
 xitSkipAsync' = flip runXitSkipAsync
 
 -- |
 -- `Describe`
 --
-runDesc_ :: forall eff a.
-  String ->
+runDesc_ n  = run n sync 0
+
+type DoDescribe = forall eff a.
   String ->
   Eff (describe :: Describe | eff) a ->
   Eff (describe :: Describe | eff) Unit
-runDesc_ n  = run n sync 0
 
+describe     :: DoDescribe
 describe     = runDesc_ "describe"
+describeOnly :: DoDescribe
 describeOnly = runDesc_ "describe.only"
+describeSkip :: DoDescribe
 describeSkip = runDesc_ "describe.skip"
 
 -- |
 -- `Xdescribe`
 --
-runXdesc_ :: forall eff a.
-  String ->
-  String ->
-  Eff (describe :: Describe | eff) a ->
-  Eff (describe :: Describe | eff) Unit
-runXdesc_ n  = run n sync 0
-
-xdescribe     = runXdesc_ "xdescribe"
-xdescribeOnly = runXdesc_ "xdescribe.only"
-xdescribeSkip = runXdesc_ "xdescribe.skip"
+xdescribe     :: DoDescribe
+xdescribe     = runDesc_ "xdescribe"
+xdescribeOnly :: DoDescribe
+xdescribeOnly = runDesc_ "xdescribe.only"
+xdescribeSkip :: DoDescribe
+xdescribeSkip = runDesc_ "xdescribe.skip"
 
 -- |
 -- Before / BeforeEach Hook
 --
 
-runBeforeSync_ :: forall eff a.
-  String ->
-  Number ->
-  Eff eff a ->
-  Eff (before :: Before | eff) Unit
-runBeforeSync_ n = hook n sync
-
+runBeforeSync_ n  = hook n sync
 runBeforeSync     = runBeforeSync_ "before"
 runBeforeEachSync = runBeforeSync_ "beforeEach"
 
-before      = runBeforeSync 0
+type DoBefore = forall eff a.
+  Eff eff a ->
+  Eff (before :: Before | eff) Unit
+
+before     :: DoBefore
+before     = runBeforeSync 0
+beforeEach :: DoBefore
+beforeEach = runBeforeEachSync 0
+
+type DoBeforeTimeout = forall eff a.
+  Number ->
+  Eff eff a ->
+  Eff (before :: Before | eff) Unit
+
+before'     :: DoBeforeTimeout
 before'     = runBeforeSync
-beforeEach  = runBeforeEachSync 0
+beforeEach' :: DoBeforeTimeout
 beforeEach' = runBeforeEachSync
 
-runBeforeAsync_ :: forall eff a.
-  String ->
-  Number ->
-  (DoneToken -> Eff (done :: Done | eff) a) ->
-  Eff (before :: Before | eff) Unit
-runBeforeAsync_ n = hook n async
-
+runBeforeAsync_ n  = hook n async
 runBeforeAsync     = runBeforeAsync_ "before"
 runBeforeEachAsync = runBeforeAsync_ "beforeEach"
 
-beforeAsync      = runBeforeAsync 0
+type DoBeforeAsync = forall eff a.
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (before :: Before | eff) Unit
+
+beforeAsync     :: DoBeforeAsync
+beforeAsync     = runBeforeAsync 0
+beforeEachAsync :: DoBeforeAsync
+beforeEachAsync = runBeforeEachAsync 0
+
+type DoBeforeAsyncTimeout = forall eff a.
+  Number ->
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (before :: Before | eff) Unit
+
+beforeAsync'     :: DoBeforeAsyncTimeout
 beforeAsync'     = runBeforeAsync
-beforeEachAsync  = runBeforeEachAsync 0
+beforeEachAsync' :: DoBeforeAsyncTimeout
 beforeEachAsync' = runBeforeEachAsync
 
 -- |
 -- After / AfterEach Hook
 --
 
-runAfterSync_ :: forall eff a.
-  String ->
-  Number ->
-  Eff eff a ->
-  Eff (after :: After | eff) Unit
-runAfterSync_ n = hook n sync
-
+runAfterSync_ n  = hook n sync
 runAfterSync     = runAfterSync_ "after"
 runAfterEachSync = runAfterSync_ "afterEach"
 
+type DoAfter = forall eff a.
+  Eff eff a ->
+  Eff (after :: After | eff) Unit
+
+after      :: DoAfter
 after      = runAfterSync 0
-after'     = runAfterSync
+afterEach  :: DoAfter
 afterEach  = runAfterEachSync 0
+
+type DoAfterTimeout = forall eff a.
+  Number ->
+  Eff eff a ->
+  Eff (after :: After | eff) Unit
+
+after'     :: DoAfterTimeout
+after'     = runAfterSync
+afterEach' :: DoAfterTimeout
 afterEach' = runAfterEachSync
 
 runAfterAsync_ :: forall eff a.
@@ -298,9 +348,23 @@ runAfterAsync_ n = hook n async
 runAfterAsync     = runAfterAsync_ "after"
 runAfterEachAsync = runAfterAsync_ "afterEach"
 
-afterAsync      = runAfterAsync 0
+type DoAfterAsync = forall eff a.
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (after :: After | eff) Unit
+
+afterAsync     :: DoAfterAsync
+afterAsync     = runAfterAsync 0
+afterEachAsync :: DoAfterAsync
+afterEachAsync = runAfterEachAsync 0
+
+type DoAfterAsyncTimeout = forall eff a.
+  Number ->
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (after :: After | eff) Unit
+
+afterAsync'     :: DoAfterAsyncTimeout
 afterAsync'     = runAfterAsync
-afterEachAsync  = runAfterEachAsync 0
+afterEachAsync' :: DoAfterAsyncTimeout
 afterEachAsync' = runAfterEachAsync
 
 -- |
