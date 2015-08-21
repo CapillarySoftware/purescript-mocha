@@ -1,16 +1,38 @@
 module Test.Mocha
-  ( Describe(..), DoDescribe(..), DoBefore(..), DoAfter(..)
-  , It(..), DoIt(..)
+  ( Describe(..)
+  , It(..), Before(..), After(..)
   , itIs, itIsNot, Done(..), DoneToken(..)
-  , it, itAsync, itSkip, itOnly
-  , describe, describeSkip, describeOnly
-  , before, beforeEach, beforeAsync, beforeEachAsync, Before(..)
-  , after, afterEach, afterAsync, afterEachAsync, After(..)
+
+  , xit, xdescribe, xdescribe'
+
+  , DoItSync(..), DoItSyncTimeout(..)
+  , DoItAsync(..), DoItAsyncTimeout(..)
+  , it, itOnly, itSkip
+  , it', itOnly', itSkip'
+  , itAsync, itOnlyAsync, itSkipAsync
+  , itAsync', itOnlyAsync', itSkipAsync'
+
+  , DoDescribe(..)
+  , describe, describeOnly, describeSkip
+
+  , DoBefore(..), DoBeforeTimeout(..)
+  , DoBeforeAsync(..), DoBeforeAsyncTimeout(..)
+  , before, before', beforeAsync, beforeAsync'
+  , beforeEach, beforeEach', beforeEachAsync, beforeEachAsync'
+
+  , DoAfter(..), DoAfterTimeout(..)
+  , DoAfterAsync(..), DoAfterAsyncTimeout(..)
+  , after, after', afterAsync, afterAsync'
+  , afterEach, afterEach', afterEachAsync, afterEachAsync'
   ) where
 
 import Control.Monad.Eff
 import Data.Foreign.OOFFI
 import Context
+import Data.Function
+import Data.String
+import Data.Maybe
+import Data.Maybe.Unsafe (fromJust)
 
 foreign import data Before :: !
 foreign import data Describe :: !
@@ -18,82 +40,298 @@ foreign import data It :: !
 foreign import data After :: !
 foreign import data Done :: !
 
-type DoIt = forall e a.
-  String ->
-  Eff e a ->
-  Eff (it :: It | e) Unit
-
-type DoDescribe = forall e a.
-  String ->
-  Eff (describe :: Describe | e) a ->
-  Eff (describe :: Describe | e) Unit
-
-type DoBefore = forall e a.
-  Eff e a ->
-  Eff (before :: Before | e) Unit
-
-type DoAfter = forall e a.
-  Eff e a ->
-  Eff (after :: After | e) Unit
-
 data DoneToken = DoneToken
 
-describe :: DoDescribe
-describe = method2EffC "describe"
+-- |
+-- Resolve a property recursively
+--
+_resolveC :: forall eff.
+  Maybe Context -> [String] -> Eff (|eff) (Maybe Context)
+_resolveC ctx [] = pure ctx
+_resolveC Nothing [] =
+  getContext >>= pure <<< Just
+_resolveC ctx (x:xs) = do
+  c <- case ctx of
+        Just c  -> pure c
+        Nothing -> getContext
+  p <- getter x c
+  _resolveC (Just p) xs
 
-foreign import describeOnly
-  """function describeOnly(description) {
-      return function(fn) {
-        return function() {
-          PS.Context.getContext().describe.only(description, fn);
-        }
+resolveC :: forall eff. String -> Eff (|eff) Context
+resolveC xs = do
+  ctx <- _resolveC Nothing $ split "." xs
+  return $ fromJust ctx
+
+-- |
+-- Apply a context as a function
+--
+foreign import apply0Impl
+  """function apply0Impl (ctx) {
+      return function() {
+        ctx();
       }
-  }""" :: DoDescribe
+  }""" :: forall eff. Fn1 Context (Eff eff Unit)
+apply0 = runFn1 apply0Impl
 
-foreign import describeSkip
-  """function describeSkip(description) {
-      return function(fn) {
-        return function() {
-          PS.Context.getContext().describe.skip(description, fn);
-        }
+foreign import apply1Impl
+  """function apply1Impl (ctx, a) {
+      return function() {
+        ctx(a);
       }
-  }""" :: DoDescribe
+  }""" :: forall a eff. Fn2 Context a (Eff eff Unit)
+apply1 = runFn2 apply1Impl
 
-it :: DoIt
-it = method2EffC "it"
-
-foreign import itOnly
-  """function itOnly(description) {
-      return function(fn) {
-        return function() {
-          PS.Context.getContext().it.only(description, fn);
-        }
+foreign import apply2Impl
+  """function apply2Impl (ctx, a, b) {
+      return function() {
+        ctx(a, b);
       }
-  }""" :: DoIt
+  }""" :: forall a b eff. Fn3 Context a b (Eff eff Unit)
+apply2 = runFn3 apply2Impl
 
-foreign import itSkip
-  """function itSkip(description) {
-      return function(fn) {
-        return function() {
-          PS.Context.getContext().it.skip(description, fn);
+-- |
+-- Generate a handler
+--
+foreign import syncImpl
+  """function syncImpl(fn, timeout) {
+      return function() {
+        if (timeout > 0) {
+            this.timeout(timeout);
         }
+        fn();
       }
-  }""" :: DoIt
+  }""" :: forall a eff. Fn2
+            (Eff eff a)
+            (Number)
+            (Eff eff Unit)
+sync = runFn2 syncImpl
 
-foreign import itAsync
-  """function itAsync(description) {
-      return function (fn) {
-        return function() {
-          return PS.Context.getContext().it(description, function(done) {
-            return fn(done)();
-          });
-        };
-      };
-  }""" :: forall a eff.
-          String ->
-          (DoneToken -> Eff (done :: Done | eff) a) ->
-          Eff (it :: It | eff) Unit
+foreign import asyncImpl
+  """function asyncImpl(fn, timeout) {
+      return function(done) {
+        if (timeout > 0) {
+           this.timeout(timeout);
+        }
+        fn(done)();
+      }
+  }""" :: forall a eff. Fn2
+            (DoneToken -> Eff (done :: Done | eff) a)
+            (Number)
+            (Eff eff Unit)
+async = runFn2 asyncImpl
 
+-- |
+-- Easily register a runners and hooks.
+--
+run  n t to d fn = resolveC n >>= \c -> apply2 c d $ t fn to
+hook n t to fn   = resolveC n >>= \c -> apply1 c $ t fn to
+
+-- |
+-- `It`
+--
+
+runItSync_ n  = run n sync
+runItSync     = runItSync_ "it"
+runItOnlySync = runItSync_ "it.only"
+runItSkipSync = runItSync_ "it.skip"
+
+type DoItSync = forall a eff.
+  String ->
+  Eff eff a ->
+  Eff (it :: It | eff) Unit
+
+it     :: DoItSync
+it     = runItSync     0
+itOnly :: DoItSync
+itOnly = runItOnlySync 0
+itSkip :: DoItSync
+itSkip = runItSkipSync 0
+
+type DoItSyncTimeout = forall a eff.
+  String ->
+  Number ->
+  Eff eff a ->
+  Eff (it :: It | eff) Unit
+
+it'     :: DoItSyncTimeout
+it'     = flip runItSync
+itOnly' :: DoItSyncTimeout
+itOnly' = flip runItOnlySync
+itSkip' :: DoItSyncTimeout
+itSkip' = flip runItSkipSync
+
+runItAsync_ n  = run n async
+runItAsync     = runItAsync_ "it"
+runItOnlyAsync = runItAsync_ "it.only"
+runItSkipAsync = runItAsync_ "it.skip"
+
+type DoItAsync = forall a eff.
+  String ->
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (it :: It | eff) Unit
+
+itAsync      :: DoItAsync
+itAsync      = runItAsync     0
+itOnlyAsync  :: DoItAsync
+itOnlyAsync  = runItOnlyAsync 0
+itSkipAsync  :: DoItAsync
+itSkipAsync  = runItSkipAsync 0
+
+type DoItAsyncTimeout = forall a eff.
+  String ->
+  Number ->
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (it :: It | eff) Unit
+
+itAsync'     :: DoItAsyncTimeout
+itAsync'     = flip runItAsync
+itOnlyAsync' :: DoItAsyncTimeout
+itOnlyAsync' = flip runItOnlyAsync
+itSkipAsync' :: DoItAsyncTimeout
+itSkipAsync' = flip runItSkipAsync
+
+-- |
+-- `Xit`
+--
+
+xit :: forall eff. String -> Eff eff Unit
+xit = flip (runItSync 0) $ pure unit
+
+-- |
+-- `Describe`
+--
+runDesc_ n  = run n sync 0
+
+type DoDescribe = forall eff a.
+  String ->
+  Eff (describe :: Describe | eff) a ->
+  Eff (describe :: Describe | eff) Unit
+
+describe     :: DoDescribe
+describe     = runDesc_ "describe"
+describeOnly :: DoDescribe
+describeOnly = runDesc_ "describe.only"
+describeSkip :: DoDescribe
+describeSkip = runDesc_ "describe.skip"
+
+-- |
+-- `Xdescribe`
+--
+xdescribe  :: DoDescribe
+xdescribe  = runDesc_ "xdescribe"
+
+xdescribe' :: forall eff. String -> Eff eff Unit
+xdescribe' = flip (runDesc_ "xdescribe") $ pure unit
+
+-- |
+-- Before / BeforeEach Hook
+--
+
+runBeforeSync_ n  = hook n sync
+runBeforeSync     = runBeforeSync_ "before"
+runBeforeEachSync = runBeforeSync_ "beforeEach"
+
+type DoBefore = forall eff a.
+  Eff eff a ->
+  Eff (before :: Before | eff) Unit
+
+before     :: DoBefore
+before     = runBeforeSync 0
+beforeEach :: DoBefore
+beforeEach = runBeforeEachSync 0
+
+type DoBeforeTimeout = forall eff a.
+  Number ->
+  Eff eff a ->
+  Eff (before :: Before | eff) Unit
+
+before'     :: DoBeforeTimeout
+before'     = runBeforeSync
+beforeEach' :: DoBeforeTimeout
+beforeEach' = runBeforeEachSync
+
+runBeforeAsync_ n  = hook n async
+runBeforeAsync     = runBeforeAsync_ "before"
+runBeforeEachAsync = runBeforeAsync_ "beforeEach"
+
+type DoBeforeAsync = forall eff a.
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (before :: Before | eff) Unit
+
+beforeAsync     :: DoBeforeAsync
+beforeAsync     = runBeforeAsync 0
+beforeEachAsync :: DoBeforeAsync
+beforeEachAsync = runBeforeEachAsync 0
+
+type DoBeforeAsyncTimeout = forall eff a.
+  Number ->
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (before :: Before | eff) Unit
+
+beforeAsync'     :: DoBeforeAsyncTimeout
+beforeAsync'     = runBeforeAsync
+beforeEachAsync' :: DoBeforeAsyncTimeout
+beforeEachAsync' = runBeforeEachAsync
+
+-- |
+-- After / AfterEach Hook
+--
+
+runAfterSync_ n  = hook n sync
+runAfterSync     = runAfterSync_ "after"
+runAfterEachSync = runAfterSync_ "afterEach"
+
+type DoAfter = forall eff a.
+  Eff eff a ->
+  Eff (after :: After | eff) Unit
+
+after      :: DoAfter
+after      = runAfterSync 0
+afterEach  :: DoAfter
+afterEach  = runAfterEachSync 0
+
+type DoAfterTimeout = forall eff a.
+  Number ->
+  Eff eff a ->
+  Eff (after :: After | eff) Unit
+
+after'     :: DoAfterTimeout
+after'     = runAfterSync
+afterEach' :: DoAfterTimeout
+afterEach' = runAfterEachSync
+
+runAfterAsync_ :: forall eff a.
+  String ->
+  Number ->
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (after :: After | eff) Unit
+runAfterAsync_ n = hook n async
+
+runAfterAsync     = runAfterAsync_ "after"
+runAfterEachAsync = runAfterAsync_ "afterEach"
+
+type DoAfterAsync = forall eff a.
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (after :: After | eff) Unit
+
+afterAsync     :: DoAfterAsync
+afterAsync     = runAfterAsync 0
+afterEachAsync :: DoAfterAsync
+afterEachAsync = runAfterEachAsync 0
+
+type DoAfterAsyncTimeout = forall eff a.
+  Number ->
+  (DoneToken -> Eff (done :: Done | eff) a) ->
+  Eff (after :: After | eff) Unit
+
+afterAsync'     :: DoAfterAsyncTimeout
+afterAsync'     = runAfterAsync
+afterEachAsync' :: DoAfterAsyncTimeout
+afterEachAsync' = runAfterEachAsync
+
+-- |
+-- Async completion triggers
+--
 foreign import itIs
   """function itIs(done) {
       return function() {
@@ -110,63 +348,3 @@ foreign import itIsNot
   }""" :: forall eff a.
           DoneToken ->
           Eff (done :: Done | eff) Unit
-
--- | Before Hooks
-
-before :: DoBefore
-before = method1EffC "before"
-
-beforeEach :: DoBefore
-beforeEach = method1EffC "beforeEach"
-
-foreign import beforeAsync
-  """function beforeAsync(fn) {
-      return function() {
-        PS.Context.getContext().before(function(done) {
-          return fn(done)();
-        });
-      };
-  }""" :: forall a eff.
-          (DoneToken -> Eff (done :: Done | eff) a) ->
-          Eff (it :: It | eff) Unit
-
-foreign import beforeEachAsync
-  """function beforeEachAsync(fn) {
-      return function() {
-        PS.Context.getContext().beforeEach(function(done) {
-          return fn(done)();
-        });
-      };
-  }""" :: forall a eff.
-          (DoneToken -> Eff (done :: Done | eff) a) ->
-          Eff (it :: It | eff) Unit
-
--- | After Hooks
-
-after :: DoAfter
-after = method1EffC "after"
-
-afterEach :: DoAfter
-afterEach = method1EffC "afterEach"
-
-foreign import afterAsync
-  """function afterAsync(fn) {
-      return function() {
-        PS.Context.getContext().after(function(done) {
-          return fn(done)();
-        });
-      };
-  }""" :: forall a eff.
-          (DoneToken -> Eff (done :: Done | eff) a) ->
-          Eff (it :: It | eff) Unit
-
-foreign import afterEachAsync
-  """function afterEachAsync(fn) {
-      return function() {
-        PS.Context.getContext().afterEach(function(done) {
-          return fn(done)();
-        });
-      };
-  }""" :: forall a eff.
-          (DoneToken -> Eff (done :: Done | eff) a) ->
-          Eff (it :: It | eff) Unit

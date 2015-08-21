@@ -15,7 +15,9 @@
   "dependencies": {
     "mocha": "~1.21.4",
     "purescript-oo-ffi": "~0.0.4",
-    "purescript-context": "~0.0.3"
+    "purescript-context": "~0.0.3",
+    "purescript-maybe": "~0.2.2",
+    "purescript-strings": "~0.4.5"
   },
   "ignore": [
     "**/.*",

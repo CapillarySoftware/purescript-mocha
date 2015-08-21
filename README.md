@@ -41,39 +41,136 @@ data Done :: !
 ```
 
 
-#### `DoIt`
-
-``` purescript
-type DoIt = forall e a. String -> Eff e a -> Eff (it :: It | e) Unit
-```
-
-
-#### `DoDescribe`
-
-``` purescript
-type DoDescribe = forall e a. String -> Eff (describe :: Describe | e) a -> Eff (describe :: Describe | e) Unit
-```
-
-
-#### `DoBefore`
-
-``` purescript
-type DoBefore = forall e a. Eff e a -> Eff (before :: Before | e) Unit
-```
-
-
-#### `DoAfter`
-
-``` purescript
-type DoAfter = forall e a. Eff e a -> Eff (after :: After | e) Unit
-```
-
-
 #### `DoneToken`
 
 ``` purescript
 data DoneToken
   = DoneToken 
+```
+
+
+#### `DoItSync`
+
+``` purescript
+type DoItSync = forall a eff. String -> Eff eff a -> Eff (it :: It | eff) Unit
+```
+
+
+#### `it`
+
+``` purescript
+it :: DoItSync
+```
+
+
+#### `itOnly`
+
+``` purescript
+itOnly :: DoItSync
+```
+
+
+#### `itSkip`
+
+``` purescript
+itSkip :: DoItSync
+```
+
+
+#### `DoItSyncTimeout`
+
+``` purescript
+type DoItSyncTimeout = forall a eff. String -> Number -> Eff eff a -> Eff (it :: It | eff) Unit
+```
+
+
+#### `it'`
+
+``` purescript
+it' :: DoItSyncTimeout
+```
+
+
+#### `itOnly'`
+
+``` purescript
+itOnly' :: DoItSyncTimeout
+```
+
+
+#### `itSkip'`
+
+``` purescript
+itSkip' :: DoItSyncTimeout
+```
+
+
+#### `DoItAsync`
+
+``` purescript
+type DoItAsync = forall a eff. String -> (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+```
+
+
+#### `itAsync`
+
+``` purescript
+itAsync :: DoItAsync
+```
+
+
+#### `itOnlyAsync`
+
+``` purescript
+itOnlyAsync :: DoItAsync
+```
+
+
+#### `itSkipAsync`
+
+``` purescript
+itSkipAsync :: DoItAsync
+```
+
+
+#### `DoItAsyncTimeout`
+
+``` purescript
+type DoItAsyncTimeout = forall a eff. String -> Number -> (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+```
+
+
+#### `itAsync'`
+
+``` purescript
+itAsync' :: DoItAsyncTimeout
+```
+
+
+#### `itOnlyAsync'`
+
+``` purescript
+itOnlyAsync' :: DoItAsyncTimeout
+```
+
+
+#### `itSkipAsync'`
+
+``` purescript
+itSkipAsync' :: DoItAsyncTimeout
+```
+
+
+#### `xit`
+
+``` purescript
+xit :: forall eff. String -> Eff eff Unit
+```
+
+#### `DoDescribe`
+
+``` purescript
+type DoDescribe = forall eff a. String -> Eff (describe :: Describe | eff) a -> Eff (describe :: Describe | eff) Unit
 ```
 
 
@@ -98,45 +195,23 @@ describeSkip :: DoDescribe
 ```
 
 
-#### `it`
+#### `xdescribe`
 
 ``` purescript
-it :: DoIt
+xdescribe :: DoDescribe
+```
+
+#### `xdescribe'`
+
+``` purescript
+xdescribe' :: forall eff. String -> Eff eff Unit
 ```
 
 
-#### `itOnly`
+#### `DoBefore`
 
 ``` purescript
-itOnly :: DoIt
-```
-
-
-#### `itSkip`
-
-``` purescript
-itSkip :: DoIt
-```
-
-
-#### `itAsync`
-
-``` purescript
-itAsync :: forall a eff. String -> (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
-```
-
-
-#### `itIs`
-
-``` purescript
-itIs :: forall eff. DoneToken -> Eff (done :: Done | eff) Unit
-```
-
-
-#### `itIsNot`
-
-``` purescript
-itIsNot :: forall eff a. DoneToken -> Eff (done :: Done | eff) Unit
+type DoBefore = forall eff a. Eff eff a -> Eff (before :: Before | eff) Unit
 ```
 
 
@@ -146,7 +221,6 @@ itIsNot :: forall eff a. DoneToken -> Eff (done :: Done | eff) Unit
 before :: DoBefore
 ```
 
-Before Hooks
 
 #### `beforeEach`
 
@@ -155,17 +229,73 @@ beforeEach :: DoBefore
 ```
 
 
+#### `DoBeforeTimeout`
+
+``` purescript
+type DoBeforeTimeout = forall eff a. Number -> Eff eff a -> Eff (before :: Before | eff) Unit
+```
+
+
+#### `before'`
+
+``` purescript
+before' :: DoBeforeTimeout
+```
+
+
+#### `beforeEach'`
+
+``` purescript
+beforeEach' :: DoBeforeTimeout
+```
+
+
+#### `DoBeforeAsync`
+
+``` purescript
+type DoBeforeAsync = forall eff a. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (before :: Before | eff) Unit
+```
+
+
 #### `beforeAsync`
 
 ``` purescript
-beforeAsync :: forall a eff. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+beforeAsync :: DoBeforeAsync
 ```
 
 
 #### `beforeEachAsync`
 
 ``` purescript
-beforeEachAsync :: forall a eff. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+beforeEachAsync :: DoBeforeAsync
+```
+
+
+#### `DoBeforeAsyncTimeout`
+
+``` purescript
+type DoBeforeAsyncTimeout = forall eff a. Number -> (DoneToken -> Eff (done :: Done | eff) a) -> Eff (before :: Before | eff) Unit
+```
+
+
+#### `beforeAsync'`
+
+``` purescript
+beforeAsync' :: DoBeforeAsyncTimeout
+```
+
+
+#### `beforeEachAsync'`
+
+``` purescript
+beforeEachAsync' :: DoBeforeAsyncTimeout
+```
+
+
+#### `DoAfter`
+
+``` purescript
+type DoAfter = forall eff a. Eff eff a -> Eff (after :: After | eff) Unit
 ```
 
 
@@ -175,7 +305,6 @@ beforeEachAsync :: forall a eff. (DoneToken -> Eff (done :: Done | eff) a) -> Ef
 after :: DoAfter
 ```
 
-After Hooks
 
 #### `afterEach`
 
@@ -184,15 +313,77 @@ afterEach :: DoAfter
 ```
 
 
+#### `DoAfterTimeout`
+
+``` purescript
+type DoAfterTimeout = forall eff a. Number -> Eff eff a -> Eff (after :: After | eff) Unit
+```
+
+
+#### `after'`
+
+``` purescript
+after' :: DoAfterTimeout
+```
+
+
+#### `afterEach'`
+
+``` purescript
+afterEach' :: DoAfterTimeout
+```
+
+
+#### `DoAfterAsync`
+
+``` purescript
+type DoAfterAsync = forall eff a. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (after :: After | eff) Unit
+```
+
+
 #### `afterAsync`
 
 ``` purescript
-afterAsync :: forall a eff. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+afterAsync :: DoAfterAsync
 ```
 
 
 #### `afterEachAsync`
 
 ``` purescript
-afterEachAsync :: forall a eff. (DoneToken -> Eff (done :: Done | eff) a) -> Eff (it :: It | eff) Unit
+afterEachAsync :: DoAfterAsync
+```
+
+
+#### `DoAfterAsyncTimeout`
+
+``` purescript
+type DoAfterAsyncTimeout = forall eff a. Number -> (DoneToken -> Eff (done :: Done | eff) a) -> Eff (after :: After | eff) Unit
+```
+
+
+#### `afterAsync'`
+
+``` purescript
+afterAsync' :: DoAfterAsyncTimeout
+```
+
+
+#### `afterEachAsync'`
+
+``` purescript
+afterEachAsync' :: DoAfterAsyncTimeout
+```
+
+
+#### `itIs`
+
+``` purescript
+itIs :: forall eff. DoneToken -> Eff (done :: Done | eff) Unit
+```
+
+#### `itIsNot`
+
+``` purescript
+itIsNot :: forall eff a. DoneToken -> Eff (done :: Done | eff) Unit
 ```
