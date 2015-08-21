@@ -1,4 +1,4 @@
-# Module Documentation
+# This is project is dead with no active maintainer. If you want to maintain this, let me know.
 
 [![Build Status](https://travis-ci.org/CapillarySoftware/purescript-mocha.svg?branch=master)](https://travis-ci.org/CapillarySoftware/purescript-mocha)
 [![Bower version](https://badge.fury.io/bo/purescript-mocha.svg)](http://badge.fury.io/bo/purescript-mocha)
